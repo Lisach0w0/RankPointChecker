@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import HelloWorld from "./components/HelloWorld.vue";
 // TODO firebase呼び出し
 // firestore接続
 // 仮で特定のランク設定取得
-
 
 // テスト用でランクポイントの計算表json仮設定
 // ランク表定義
