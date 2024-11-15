@@ -16,7 +16,16 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/", name: "home", component: Home },
-    { path: "/checker/:id", name: "checker", component: PointChecker },
+    {
+      path: "/checker/:id",
+      name: "checker",
+      component: PointChecker,
+      props: (routes) => {
+        return {
+          id: routes.params.id,
+        };
+      },
+    },
     { path: "/create/:id", name: "create", component: CreateCheckerView },
     { path: "/organizer", name: "organizer", component: Organizer },
     { path: "/register", name: "register", component: Register },

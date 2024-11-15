@@ -92,7 +92,9 @@ const toggleBurgerButton = () => {
     >
       <div class="navbar-start">
         <router-link to="/" class="navbar-item">Home</router-link>
-        <router-link to="/checker" class="navbar-item">Checker</router-link>
+        <router-link to="/checker/testChecker" class="navbar-item"
+          >Checker</router-link
+        >
         <router-link v-if="state.isLogin" to="/organizer" class="navbar-item"
           >Manage</router-link
         >
@@ -115,7 +117,10 @@ const toggleBurgerButton = () => {
     </div>
   </nav>
   <!-- router -->
-  <RouterView></RouterView>
+  <Suspense>
+    <RouterView></RouterView>
+    <template #fallback> Loading... </template>
+  </Suspense>
 </template>
 
 <style lang="scss" scoped></style>

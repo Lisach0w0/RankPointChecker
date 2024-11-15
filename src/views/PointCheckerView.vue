@@ -1,32 +1,19 @@
 <script setup lang="ts">
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { computed, reactive } from "vue";
-// TODO firebase呼び出し
-// firestore接続
-// 仮で特定のランク設定取得
+import { PointCheckerSetting, RankOptions } from "../types";
 
-// テスト用でランクポイントの計算表json仮設定
-type Rank = {
-  name: string;
-  points: number;
-};
+// props定義
+const props = defineProps({
+  id: { type: String },
+});
 
-const rankPointOptions: Rank[] = [
-  { name: "未選択", points: 0 },
-  { name: "ブロンズ", points: 10 },
-  { name: "シルバー", points: 20 },
-  { name: "ゴールド", points: 30 },
-  { name: "プラチナ", points: 40 },
-  { name: "ダイヤ", points: 50 },
-  { name: "マスター", points: 60 },
-  { name: "グラマス", points: 70 },
-  { name: "チャンピオン", points: 80 },
-  { name: "OWCS経験者", points: 100 },
-];
-
+// state定義
 type State = {
   players: { name: string; label: string; point: number }[];
   targetPoint: number;
   totalPoint: number;
+  isError: boolean;
 };
 
 const state = reactive<State>({
@@ -42,11 +29,41 @@ const state = reactive<State>({
   targetPoint: 250,
   // 合計ポイント
   totalPoint: 0,
+  // エラーかどうか
+  isError: false,
 });
 
-// ランク表定義
-// 規定ポイント定義
-// メンバー追加
+// ランクポイント設定
+let rankPointOptions: RankOptions[] = [];
+
+// firebase呼び出し
+const firestoreClient = getFirestore();
+// firestore接続
+const rankPointSettingRef = doc(firestoreClient, `/pointSettings/${props.id}`);
+const snapShot = await getDoc(rankPointSettingRef);
+// 特定のランク設定取得
+if (!snapShot.exists()) {
+  console.error("data not found");
+  state.isError = true;
+  rankPointOptions = [
+    { name: "未選択", point: 0 },
+    { name: "ブロンズ", point: 10 },
+    { name: "シルバー", point: 20 },
+    { name: "ゴールド", point: 30 },
+    { name: "プラチナ", point: 40 },
+    { name: "ダイヤ", point: 50 },
+    { name: "マスター", point: 60 },
+    { name: "グラマス", point: 70 },
+    { name: "チャンピオン", point: 80 },
+    { name: "OWCS経験者", point: 100 },
+  ];
+} else {
+  const rankPointSetting = snapShot.data() as PointCheckerSetting;
+  rankPointOptions = rankPointSetting.rankPoints;
+  rankPointOptions.unshift({ name: "no select", point: 0 });
+  state.targetPoint = rankPointSetting.targetPoint;
+}
+
 // メンバーのランクポイント計算(watchしたいなぁ)
 const updateTotalPoint = () => {
   state.totalPoint = state.players.reduce((sum, item) => sum + item.point, 0);
@@ -77,64 +94,73 @@ const isOverflow = computed(() => {
         <p class="subtitle">created by Lisach0w0</p>
       </div>
     </section>
-    <section class="section">
-      <div
-        v-for="(player, index) in state.players"
-        :key="index"
-        class="columns is-centered"
-      >
-        <div class="column is-2 is-size-4 has-text-centered has-text-justified">
-          {{ index + 1 }}人目
-        </div>
-        <div class="column is-narrow">
-          <div class="select">
-            <select v-model="player.point" @change="updateTotalPoint">
-              <option
-                v-for="rank in rankPointOptions"
-                :key="rank.name"
-                :value="rank.points"
-              >
-                {{ rank.name }} {{ rank.points }}pt
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="column is-2">
-          <button
-            class="button is-danger is-outlined"
-            @click="removeMember(index)"
-            :disabled="state.players.length == 1"
+    <section v-if="!state.isError">
+      <section class="section">
+        <div
+          v-for="(player, index) in state.players"
+          :key="index"
+          class="columns is-centered"
+        >
+          <div
+            class="column is-2 is-size-4 has-text-centered has-text-justified"
           >
-            <span>削除</span>
-            <!-- <span class="icon is-small">
+            {{ index + 1 }}人目
+          </div>
+          <div class="column is-narrow">
+            <div class="select">
+              <select v-model="player.point" @change="updateTotalPoint">
+                <option
+                  v-for="rank in rankPointOptions"
+                  :key="rank.name"
+                  :value="rank.point"
+                >
+                  {{ rank.name }} {{ rank.point }}pt
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="column is-2">
+            <button
+              class="button is-danger is-outlined"
+              @click="removeMember(index)"
+              :disabled="state.players.length == 1"
+            >
+              <span>削除</span>
+              <!-- <span class="icon is-small">
             <i class="fas fa-times"></i>
           </span> -->
-          </button>
+            </button>
+          </div>
         </div>
+        <div class="columns is-centered">
+          <div class="column is-narrow">
+            <button
+              class="button is-success"
+              style="width: 200px"
+              @click="addMember"
+            >
+              追加
+            </button>
+          </div>
+        </div>
+      </section>
+      <p class="is-size-3 has-text-centered">
+        合計ポイント: {{ state.totalPoint }}
+      </p>
+      <div class="is-size-5">
+        <p v-show="isOverflow" class="has-text-danger has-text-centered">
+          ポイントが多すぎます!!!
+        </p>
       </div>
-      <div class="columns is-centered">
-        <div class="column is-narrow">
-          <button
-            class="button is-success"
-            style="width: 200px"
-            @click="addMember"
-          >
-            追加
-          </button>
-        </div>
+      <p class="is-size-3 has-text-centered">
+        ポイント上限: {{ state.targetPoint }}
+      </p>
+    </section>
+    <section v-else class="section">
+      <div class="notification is-danger is-light">
+        エラー！データがありません！！！
       </div>
     </section>
-    <p class="is-size-3 has-text-centered">
-      合計ポイント: {{ state.totalPoint }}
-    </p>
-    <div class="is-size-5">
-      <p v-show="isOverflow" class="has-text-danger has-text-centered">
-        ポイントが多すぎます!!!
-      </p>
-    </div>
-    <p class="is-size-3 has-text-centered">
-      ポイント上限: {{ state.targetPoint }}
-    </p>
   </div>
 </template>
 
