@@ -26,7 +26,7 @@ const router = createRouter({
         };
       },
     },
-    { path: "/create/:id", name: "create", component: CreateCheckerView },
+    { path: "/create/:id?", name: "create", component: CreateCheckerView },
     { path: "/organizer", name: "organizer", component: Organizer },
     { path: "/register", name: "register", component: Register },
   ],
