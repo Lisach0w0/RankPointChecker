@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { getAuth, User } from 'firebase/auth';
-import { onMounted, reactive } from 'vue';
+import { getAuth, User } from "firebase/auth";
+import { onMounted, reactive } from "vue";
 
 type State = {
   isLoading: boolean;
   isLogin: boolean;
   user: User | undefined;
   message: string;
-}
+};
 
 const state = reactive<State>({
   isLoading: true,
@@ -28,11 +28,12 @@ onMounted(() => {
       console.log("uid", user.uid);
     } else {
       console.log("not login");
-      state.message="ログインできていません。最初に戻ってもう一度ログインしてください。";
+      state.message =
+        "ログインできていません。最初に戻ってもう一度ログインしてください。";
       state.isLoading = false;
     }
   });
-  if(!state.isLoading) return;
+  if (!state.isLoading) return;
 });
 // firestoreの自分の作ったものリスト取得
 

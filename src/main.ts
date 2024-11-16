@@ -26,7 +26,16 @@ const router = createRouter({
         };
       },
     },
-    { path: "/create/:id?", name: "create", component: CreateCheckerView },
+    {
+      path: "/create/:id?",
+      name: "create",
+      component: CreateCheckerView,
+      props: (routes) => {
+        return {
+          id: routes.params.id,
+        };
+      },
+    },
     { path: "/organizer", name: "organizer", component: Organizer },
     { path: "/register", name: "register", component: Register },
   ],
